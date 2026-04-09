@@ -55,8 +55,11 @@ export default function ReviewList() {
   }
 
   function isProjectBlank(p: Project): boolean {
-    const anyText =
-      Boolean(String((p as any).project_name ?? '').trim()) ||
+    /**
+     * 重要：很多队伍会存在“只有项目名、其它全空”的占位数据（自动保存/提前建档/误导入）。
+     * 总览里这种更符合「未填写」而不是「草稿中」，否则会把大量未编辑队伍误判为草稿。
+     */
+    const anyCoreText =
       Boolean(String((p as any).one_liner ?? '').trim()) ||
       Boolean(String((p as any).inspiration ?? '').trim()) ||
       Boolean(String((p as any).solution ?? '').trim()) ||
@@ -64,7 +67,7 @@ export default function ReviewList() {
       Boolean(String((p as any).ppt_url ?? '').trim()) ||
       Boolean(String((p as any).demo_qr_url ?? '').trim())
 
-    if (anyText) return false
+    if (anyCoreText) return false
 
     // team_intro: 默认会有 1 个空成员占位，不应被视作“草稿”
     const teamIntro = (p as any).team_intro
@@ -86,6 +89,10 @@ export default function ReviewList() {
     const linksLen = nonEmptyStringCount((p as any).links)
     const screenshotsLen = nonEmptyStringCount((p as any).screenshots)
     if (hasRealMember || linksLen > 0 || screenshotsLen > 0) return false
+
+    // 项目名单独存在时仍视为「未填写」
+    const projectName = String((p as any).project_name ?? '').trim()
+    if (projectName) return true
 
     // 如果是页面自动保存/占位 insert（created_at 和 updated_at 往往非常接近），也应算「未填写」而不是「草稿」
     const created = String((p as any).created_at ?? '')
