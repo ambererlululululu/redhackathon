@@ -32,6 +32,7 @@ export type Project = {
   team_id: number
   project_name: string
   team_intro: TeamMember[]
+  team_declaration: string
   one_liner: string
   inspiration: string
   solution: string
@@ -41,6 +42,7 @@ export type Project = {
   screenshots: string[]
   demo_qr_url: string
   is_submitted: boolean
+  user_edited?: boolean
   created_at?: string
   updated_at?: string
 }

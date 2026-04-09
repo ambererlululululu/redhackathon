@@ -14,7 +14,7 @@ import WheelPicker from './WheelPicker'
 import BrandLogo from './BrandLogo'
 import { filterTeamsForPicker } from '@/lib/teamsPicker'
 
-const DEADLINE = new Date('2026-04-10T00:00:00+08:00')
+const DEADLINE = new Date('2026-04-10T12:00:00+08:00')
 
 export default function ProjectForm() {
   const [teams, setTeams] = useState<Team[]>([])
@@ -39,6 +39,7 @@ export default function ProjectForm() {
   const [form, setForm] = useState<Omit<Project, 'id' | 'team_id' | 'is_submitted' | 'created_at' | 'updated_at'>>({
     project_name: '',
     team_intro: [{ name: '', role: '', bio: '' }],
+    team_declaration: '',
     one_liner: '',
     inspiration: '',
     solution: '',
@@ -73,6 +74,8 @@ export default function ProjectForm() {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const formRef = useRef(form)
   formRef.current = form
+  /** 从 DB 加载的初始表单快照，用于判断用户是否修改过 */
+  const initialFormRef = useRef<string>('')
 
   // Load teams on mount
   useEffect(() => {
@@ -103,6 +106,7 @@ export default function ProjectForm() {
         setForm({
           project_name: data.project_name || '',
           team_intro: (data.team_intro as TeamMember[]) || [{ name: '', role: '', bio: '' }],
+          team_declaration: data.team_declaration || '',
           one_liner: data.one_liner || '',
           inspiration: data.inspiration || '',
           solution: data.solution || '',
@@ -119,12 +123,27 @@ export default function ProjectForm() {
           demo_qr_url: data.demo_qr_url || '',
         })
         setLastSaved(new Date(data.updated_at))
+        // 存储初始快照，用于 user_edited 判断
+        initialFormRef.current = JSON.stringify({
+          project_name: data.project_name || '',
+          team_intro: (data.team_intro as TeamMember[]) || [{ name: '', role: '', bio: '' }],
+          team_declaration: data.team_declaration || '',
+          one_liner: data.one_liner || '',
+          inspiration: data.inspiration || '',
+          solution: data.solution || '',
+          highlight: data.highlight || '',
+          links: (() => { const raw = (data.links as string[]) ?? []; const arr = Array.isArray(raw) ? raw : []; const p = [...arr]; while (p.length < 2) p.push(''); return p })(),
+          ppt_url: data.ppt_url || '',
+          screenshots: parseScreenshotUrls(data.screenshots),
+          demo_qr_url: data.demo_qr_url || '',
+        })
       } else {
         setProjectId(null)
         setSubmitted(false)
         setForm({
           project_name: '',
           team_intro: [{ name: '', role: '', bio: '' }],
+          team_declaration: '',
           one_liner: '',
           inspiration: '',
           solution: '',
@@ -135,6 +154,7 @@ export default function ProjectForm() {
           demo_qr_url: '',
         })
         setLastSaved(null)
+        initialFormRef.current = ''
       }
       setLoadingProject(false)
     }
@@ -153,9 +173,14 @@ export default function ProjectForm() {
     const data = formData || formRef.current
     setSaving(true)
 
+    // 判断表单是否被用户修改过（与初始加载数据对比）
+    const currentSnap = JSON.stringify(data)
+    const hasUserEdited = initialFormRef.current !== '' && currentSnap !== initialFormRef.current
+
     const payload = {
       team_id: selectedTeamId,
       ...data,
+      ...(hasUserEdited ? { user_edited: true } : {}),
     }
 
     let currentId = projectIdRef.current
@@ -279,7 +304,7 @@ export default function ProjectForm() {
   }
 
   const MAX_PPT_SIZE = 10 * 1024 * 1024 // 10MB
-  const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
+  const MAX_IMAGE_SIZE = 1 * 1024 * 1024 // 1MB
 
   const handlePptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -304,7 +329,7 @@ export default function ProjectForm() {
     if (filesToUpload.length === 0) return
     const oversized = filesToUpload.find(f => f.size > MAX_IMAGE_SIZE)
     if (oversized) {
-      alert(`图片 ${oversized.name} 大小 ${(oversized.size / 1024 / 1024).toFixed(1)}MB，超过 5MB 限制`)
+      alert(`图片 ${oversized.name} 大小 ${(oversized.size / 1024 / 1024).toFixed(1)}MB，超过 1MB 限制，请压缩后重新上传`)
       e.target.value = ''
       return
     }
@@ -322,7 +347,7 @@ export default function ProjectForm() {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > MAX_IMAGE_SIZE) {
-      alert(`图片大小 ${(file.size / 1024 / 1024).toFixed(1)}MB，超过 5MB 限制`)
+      alert(`图片大小 ${(file.size / 1024 / 1024).toFixed(1)}MB，超过 1MB 限制，请压缩后重新上传`)
       e.target.value = ''
       return
     }
@@ -356,13 +381,26 @@ export default function ProjectForm() {
       scrollToSection(id)
     }
 
-    // Validation — required fields
-    if (!form.project_name.trim()) { fail('sec-project-name', '请填写项目名称'); return }
+    // Validation — required fields（按表单顺序）
     if (form.team_intro.length > MAX_MEMBERS) {
       fail('sec-team-intro', `团队成员最多 ${MAX_MEMBERS} 人`)
       return
     }
     if (!form.team_intro.some(m => m.name.trim())) { fail('sec-team-intro', '请至少填写一位团队成员的名字'); return }
+    for (let i = 0; i < form.team_intro.length; i++) {
+      const m = form.team_intro[i]
+      if (!m.name.trim()) continue
+      const missing = !m.role.trim() ? 'role' : !m.bio.trim() ? 'bio' : null
+      if (missing) {
+        const label = missing === 'role' ? '角色' : '一句话履历'
+        fail('sec-team-intro', `请填写 ${m.name.trim()} 的${label}`)
+        const target = document.querySelector<HTMLElement>(`[data-member="${i}"][data-field="${missing}"]`)
+        target?.focus()
+        return
+      }
+    }
+    if (!form.team_declaration.trim()) { fail('sec-team-declaration', '请填写队伍宣言'); return }
+    if (!form.project_name.trim()) { fail('sec-project-name', '请填写项目名称'); return }
     if (!form.one_liner.trim()) { fail('sec-one-liner', '请填写一句话介绍'); return }
     if (!form.inspiration.trim()) { fail('sec-inspiration', '请填写灵感来源'); return }
     if (!form.solution.trim()) { fail('sec-solution', '请填写解决方案'); return }
@@ -571,7 +609,7 @@ export default function ProjectForm() {
               {verifying ? '验证中...' : isExpired ? '查看已提交信息 →' : '开始提交项目信息 →'}
             </button>
             {isExpired && (
-              <p className="text-center text-red-400/70 text-xs">提交已截止（4 月 10 日 00:00），仅可查看已提交的项目</p>
+              <p className="text-center text-red-400/70 text-xs">提交已截止（4 月 10 日 12:00），仅可查看已提交的项目</p>
             )}
           </div>
 
@@ -610,8 +648,8 @@ export default function ProjectForm() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">提交已截止</h2>
-          <p className="text-gray-light mb-2">{selectedTeam?.name}</p>
-          <p className="text-gray-dark text-sm mb-2">提交截止时间为 4 月 10 日 00:00</p>
+          <p className="text-gray-light mb-2 break-words line-clamp-2">{selectedTeam?.name}</p>
+          <p className="text-gray-dark text-sm mb-2">提交截止时间为 4 月 10 日 12:00</p>
           <p className="text-gray-dark/50 text-xs font-mono">/// RED HACKATHON</p>
         </div>
       </div>
@@ -633,7 +671,7 @@ export default function ProjectForm() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">提交成功!</h2>
-          <p className="text-gray-light mb-2">{selectedTeam?.name} 的项目信息已提交</p>
+          <p className="text-gray-light mb-2 break-words line-clamp-2">{selectedTeam?.name} 的项目信息已提交</p>
           {isExpired ? (
             <p className="text-gray-dark text-sm mb-8">提交已截止，信息已锁定</p>
           ) : (
@@ -706,21 +744,10 @@ export default function ProjectForm() {
           <p className="text-gray-dark text-sm font-mono">/// RED HACKATHON</p>
         </div>
 
-        {/* 项目名称 */}
-        <Section id="sec-project-name" title="项目名称" required error={formErrors['sec-project-name']}>
-          <input
-            type="text"
-            value={form.project_name}
-            onChange={e => updateField('project_name', e.target.value)}
-            placeholder="输入你的项目名称"
-            className="input-field"
-          />
-        </Section>
-
-        {/* 团队介绍 */}
+        {/* 团队成员 */}
         <Section
           id="sec-team-intro"
-          title="团队介绍"
+          title="团队成员"
           desc={`最多${MAX_MEMBERS}人`}
           required
           error={formErrors['sec-team-intro']}
@@ -741,6 +768,8 @@ export default function ProjectForm() {
                     value={member.role}
                     onChange={e => updateMember(idx, 'role', e.target.value)}
                     placeholder="角色"
+                    data-member={idx}
+                    data-field="role"
                     className="input-field min-w-0"
                   />
                   <input
@@ -749,6 +778,8 @@ export default function ProjectForm() {
                     onChange={e => updateMember(idx, 'bio', e.target.value)}
                     placeholder="单行履历，勿换行"
                     maxLength={CHAR_LIMITS.member_bio}
+                    data-member={idx}
+                    data-field="bio"
                     className="input-field min-w-0"
                   />
                 </div>
@@ -774,6 +805,33 @@ export default function ProjectForm() {
           ) : (
             <p className="mt-2 text-gray-dark text-xs">已达上限 {MAX_MEMBERS} 人</p>
           )}
+        </Section>
+
+        {/* 队伍宣言 */}
+        <Section id="sec-team-declaration" title="队伍宣言" required error={formErrors['sec-team-declaration']}>
+          <input
+            type="text"
+            value={form.team_declaration}
+            onChange={e => {
+              const v = e.target.value
+              if (v.length <= 100) updateField('team_declaration', v)
+            }}
+            placeholder="用一句话介绍你的队伍"
+            maxLength={100}
+            className="input-field"
+          />
+          <p className="text-right text-gray-dark/50 text-xs mt-1 font-mono">{form.team_declaration.length} / 100 字</p>
+        </Section>
+
+        {/* 项目名称 */}
+        <Section id="sec-project-name" title="项目名称" required error={formErrors['sec-project-name']}>
+          <input
+            type="text"
+            value={form.project_name}
+            onChange={e => updateField('project_name', e.target.value)}
+            placeholder="输入你的项目名称"
+            className="input-field"
+          />
         </Section>
 
         {/* 一句话介绍 */}
@@ -829,6 +887,7 @@ export default function ProjectForm() {
           id="sec-links"
           title="项目链接 & 网址"
           desc="GitHub 仓库链接 + 小红书笔记链接为必填；如有 Demo 在线地址/原型/文档，可在下方继续添加"
+          required
           error={formErrors['sec-links']}
         >
           <div className="space-y-3">
@@ -882,7 +941,7 @@ export default function ProjectForm() {
         </Section>
 
         {/* PPT 上传 */}
-        <Section title="项目 PPT/PDF（可选）">
+        <Section title="项目 PPT/PDF">
           {form.ppt_url ? (
             <div className="flex items-center gap-3 p-4 rounded-lg border border-gray-dark/30 bg-white/[0.02]">
               <div className="w-10 h-10 rounded-lg bg-green-primary/10 flex items-center justify-center shrink-0">
@@ -937,7 +996,7 @@ export default function ProjectForm() {
                 </div>
               ) : (
                 <div className="space-y-1">
-                  <span className="text-gray-light text-sm">点击上传 PPT 文件</span>
+                  <span className="text-gray-light text-sm">点击上传文件</span>
                   <p className="text-gray-dark/50 text-xs">支持 PPT、PPTX、PDF、Keynote，不超过 10MB</p>
                 </div>
               )}
@@ -946,7 +1005,7 @@ export default function ProjectForm() {
         </Section>
 
         {/* 截图上传 */}
-        <Section title="关键效果截图">
+        <Section title="关键效果截图/展示照片">
           {form.screenshots.length > 0 && (
             <div className="grid grid-cols-2 gap-3 mb-3">
               {form.screenshots.map((url, idx) => (
@@ -975,7 +1034,10 @@ export default function ProjectForm() {
               {uploadingScreenshots ? (
                 <span className="text-green-primary animate-pulse-green">上传中...</span>
               ) : (
-                <span className="text-gray-dark">点击上传截图（最多 {MAX_SCREENSHOTS} 张，已上传 {form.screenshots.length} 张）</span>
+                <>
+                  <span className="text-gray-dark">点击上传截图（最多 {MAX_SCREENSHOTS} 张，已上传 {form.screenshots.length} 张）</span>
+                  <span className="text-gray-dark/50 text-xs">单张不超过 1MB</span>
+                </>
               )}
             </label>
           ) : (

@@ -10,6 +10,7 @@ CREATE TABLE teams (
   track TEXT NOT NULL CHECK (track IN ('软件赛道', '硬件赛道')),
   /** 报名表队长手机号，提交页验证用（不暴露在 teams_public） */
   verify_phone TEXT NOT NULL DEFAULT '',
+  captain_name TEXT NOT NULL DEFAULT '',
   team_declaration TEXT NOT NULL DEFAULT ''
 );
 
@@ -19,6 +20,7 @@ CREATE TABLE projects (
   team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
   project_name TEXT DEFAULT '',
   team_intro JSONB DEFAULT '[]'::jsonb,
+  team_declaration TEXT DEFAULT '',
   one_liner TEXT DEFAULT '',
   inspiration TEXT DEFAULT '',
   solution TEXT DEFAULT '',
@@ -28,6 +30,7 @@ CREATE TABLE projects (
   screenshots JSONB DEFAULT '[]'::jsonb,
   demo_qr_url TEXT DEFAULT '',
   is_submitted BOOLEAN DEFAULT FALSE,
+  user_edited BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -132,23 +135,10 @@ INSERT INTO teams (name, track, team_declaration, verify_phone) VALUES
   ('队伍58', '硬件赛道', '', ''),
   ('队伍59', '硬件赛道', '', '');
 
--- 已有数据库迁移（在 Supabase SQL Editor 执行一次即可）
+-- 确保 teams 表有 team_declaration 列
 ALTER TABLE teams ADD COLUMN IF NOT EXISTS team_declaration TEXT NOT NULL DEFAULT '';
-DO $migrate$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'projects' AND column_name = 'team_declaration'
-  ) THEN
-    UPDATE teams t
-    SET team_declaration = TRIM(p.team_declaration)
-    FROM projects p
-    WHERE p.team_id = t.id
-      AND NULLIF(TRIM(COALESCE(p.team_declaration, '')), '') IS NOT NULL;
-  END IF;
-END
-$migrate$;
-ALTER TABLE projects DROP COLUMN IF EXISTS team_declaration;
+
+-- teams_public 视图：隐藏敏感字段（verify_phone, captain_name）
 DROP VIEW IF EXISTS teams_public;
 CREATE VIEW teams_public AS SELECT id, name, track, team_declaration FROM teams;
 GRANT SELECT ON teams_public TO anon, authenticated;

@@ -8,7 +8,7 @@ export const COLS_PER_LINE = 36
 export const LINE_LIMITS = {
   /** 队伍宣言在 teams 表维护，单行展示 */
   team_declaration: 1,
-  one_liner: 2,
+  one_liner: 3,
   inspiration: 4,
   solution: 6,
   highlight: 4,

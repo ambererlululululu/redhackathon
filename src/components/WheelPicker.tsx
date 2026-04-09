@@ -63,7 +63,7 @@ export default function WheelPicker({
             : 'border-gray-dark/30 bg-white/[0.03] hover:border-green-primary/50'
         }`}
       >
-        <span className={selectedOption ? 'text-white' : 'text-gray-dark/60'}>
+        <span className={`truncate ${selectedOption ? 'text-white' : 'text-gray-dark/60'}`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <div className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-dark transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
@@ -116,16 +116,16 @@ export default function WheelPicker({
                         : 'text-gray-light hover:bg-white/[0.04] hover:text-white'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       {isSelected && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00ce6d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00ce6d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
                       )}
-                      <span className="text-sm">{option.label}</span>
+                      <span className="text-sm truncate">{option.label}</span>
                     </div>
                     {option.sub && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
                         option.sub === '软件赛道'
                           ? 'bg-green-primary/10 text-green-primary/70'
                           : 'bg-green-bright/10 text-green-bright/70'

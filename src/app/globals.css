@@ -117,4 +117,10 @@ body {
     box-shadow: none !important;
     border: 1px solid rgba(0, 206, 109, 0.28) !important;
   }
+
+  .onepage-v2-root {
+    background: #000000 !important;
+    padding: 10mm 14mm !important;
+    border: 1px solid rgba(0, 206, 109, 0.4) !important;
+  }
 }

@@ -31,95 +31,15 @@ export default function ReviewList() {
     )
   }
 
-  function nonEmptyStringCount(v: unknown): number {
-    if (Array.isArray(v)) {
-      return v
-        .map((x) => (typeof x === 'string' ? x.trim() : ''))
-        .filter((s) => s.length > 0).length
-    }
-    if (typeof v === 'string') {
-      const t = v.trim()
-      if (!t) return 0
-      if (t.startsWith('[')) {
-        try {
-          const parsed = JSON.parse(t) as unknown
-          return nonEmptyStringCount(parsed)
-        } catch {
-          return 0
-        }
-      }
-      // treat a single url-like string as 1 entry
-      return 1
-    }
-    return 0
-  }
-
-  function isProjectBlank(p: Project): boolean {
-    /**
-     * 重要：很多队伍会存在“只有项目名、其它全空”的占位数据（自动保存/提前建档/误导入）。
-     * 总览里这种更符合「未填写」而不是「草稿中」，否则会把大量未编辑队伍误判为草稿。
-     */
-    const anyCoreText =
-      Boolean(String((p as any).one_liner ?? '').trim()) ||
-      Boolean(String((p as any).inspiration ?? '').trim()) ||
-      Boolean(String((p as any).solution ?? '').trim()) ||
-      Boolean(String((p as any).highlight ?? '').trim()) ||
-      Boolean(String((p as any).ppt_url ?? '').trim()) ||
-      Boolean(String((p as any).demo_qr_url ?? '').trim())
-
-    if (anyCoreText) return false
-
-    // team_intro: 默认会有 1 个空成员占位，不应被视作“草稿”
-    const teamIntro = (p as any).team_intro
-    const members = Array.isArray(teamIntro)
-      ? teamIntro
-      : (typeof teamIntro === 'string' && teamIntro.trim().startsWith('[')
-          ? (() => {
-              try { return JSON.parse(teamIntro) } catch { return [] }
-            })()
-          : [])
-    const hasRealMember = Array.isArray(members) && members.some((m) => {
-      if (!m || typeof m !== 'object') return false
-      const name = String((m as any).name ?? '').trim()
-      const role = String((m as any).role ?? '').trim()
-      const bio = String((m as any).bio ?? '').trim()
-      return Boolean(name || role || bio)
-    })
-
-    const linksLen = nonEmptyStringCount((p as any).links)
-    const screenshotsLen = nonEmptyStringCount((p as any).screenshots)
-    if (hasRealMember || linksLen > 0 || screenshotsLen > 0) return false
-
-    // 项目名单独存在时仍视为「未填写」
-    const projectName = String((p as any).project_name ?? '').trim()
-    if (projectName) return true
-
-    // 如果是页面自动保存/占位 insert（created_at 和 updated_at 往往非常接近），也应算「未填写」而不是「草稿」
-    const created = String((p as any).created_at ?? '')
-    const updated = String((p as any).updated_at ?? '')
-    if (created && updated) {
-      const c = Date.parse(created)
-      const u = Date.parse(updated)
-      if (Number.isFinite(c) && Number.isFinite(u)) {
-        if (Math.abs(u - c) <= 15_000) return true
-      } else if (created === updated) {
-        return true
-      }
-    }
-
-    // 无时间字段时：仅凭“全空”判为未填写
-    return true
-  }
-
   const projectMap = new Map(projects.map(p => [p.team_id, p]))
   const submitted = teams.filter(t => projectMap.get(t.id)?.is_submitted)
   const drafts = teams.filter(t => {
     const p = projectMap.get(t.id)
-    return p && !p.is_submitted && !isProjectBlank(p)
+    return p && !p.is_submitted && p.user_edited
   })
   const empty = teams.filter(t => {
     const p = projectMap.get(t.id)
-    return !p || (p && !p.is_submitted && isProjectBlank(p))
+    return !p || (!p.is_submitted && !p.user_edited)
   })
 
   return (
@@ -156,9 +76,9 @@ export default function ReviewList() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-10">
-          <StatCard label="已提交" count={submitted.length} color="green-primary" />
-          <StatCard label="草稿中" count={drafts.length} color="yellow-500" />
-          <StatCard label="未填写" count={empty.length} color="gray-dark" />
+          <StatCard label="已提交" count={submitted.length} className="text-green-primary" />
+          <StatCard label="草稿中" count={drafts.length} className="text-yellow-500" />
+          <StatCard label="未填写" count={empty.length} className="text-gray-dark" />
         </div>
 
         {/* Submitted */}
@@ -200,7 +120,7 @@ export default function ReviewList() {
                     </span>
                     <div className="flex items-center gap-2 shrink-0">
                       <a
-                        href={`/coconut/${team.id}/onepage`}
+                        href={`/coconut/${team.id}/onepage-v2`}
                         className="px-3 py-1.5 text-xs rounded-lg border border-green-primary/30 text-green-primary hover:bg-green-primary/10 transition-colors"
                       >
                         评审onepage
@@ -292,10 +212,10 @@ export default function ReviewList() {
   )
 }
 
-function StatCard({ label, count, color }: { label: string; count: number; color: string }) {
+function StatCard({ label, count, className }: { label: string; count: number; className: string }) {
   return (
     <div className="p-4 rounded-xl border border-gray-dark/15 bg-white/[0.02] text-center">
-      <div className={`text-3xl font-bold text-${color} mb-1`}>{count}</div>
+      <div className={`text-3xl font-bold mb-1 ${className}`}>{count}</div>
       <div className="text-gray-light/75 text-xs">{label}</div>
     </div>
   )
