@@ -43,7 +43,8 @@ export default function ProjectForm() {
     inspiration: '',
     solution: '',
     highlight: '',
-    links: [''],
+    // 固定 2 个必填槽位：GitHub、小红书；其余可选链接从第 3 个开始
+    links: ['', ''],
     ppt_url: '',
     screenshots: [],
     demo_qr_url: '',
@@ -106,7 +107,13 @@ export default function ProjectForm() {
           inspiration: data.inspiration || '',
           solution: data.solution || '',
           highlight: data.highlight || '',
-          links: (data.links as string[])?.length ? (data.links as string[]) : [''],
+          links: (() => {
+            const raw = (data.links as string[]) ?? []
+            const arr = Array.isArray(raw) ? raw : []
+            const padded = [...arr]
+            while (padded.length < 2) padded.push('')
+            return padded
+          })(),
           ppt_url: data.ppt_url || '',
           screenshots: parseScreenshotUrls(data.screenshots),
           demo_qr_url: data.demo_qr_url || '',
@@ -122,7 +129,7 @@ export default function ProjectForm() {
           inspiration: '',
           solution: '',
           highlight: '',
-          links: [''],
+          links: ['', ''],
           ppt_url: '',
           screenshots: [],
           demo_qr_url: '',
@@ -361,10 +368,11 @@ export default function ProjectForm() {
     if (!form.solution.trim()) { fail('sec-solution', '请填写解决方案'); return }
     if (!form.highlight.trim()) { fail('sec-highlight', '请填写最惊艳的地方'); return }
 
-    // At least one of: valid link or PPT
-    const hasLink = form.links.some(l => l.trim())
-    const hasPpt = !!form.ppt_url
-    if (!hasLink && !hasPpt) { fail('sec-links', '请至少提供一个项目链接或上传队伍 PPT'); return }
+    // GitHub + 小红书链接为必填（固定前两项）
+    const githubLink = (form.links[0] ?? '').trim()
+    const xhsLink = (form.links[1] ?? '').trim()
+    if (!githubLink) { fail('sec-links', '请填写 GitHub 仓库链接'); return }
+    if (!xhsLink) { fail('sec-links', '请填写小红书笔记链接'); return }
 
     // Team member bio：单行 + 字数（一页纸最多 6 人 × 每人一行）
     for (let i = 0; i < form.team_intro.length; i++) {
@@ -817,7 +825,12 @@ export default function ProjectForm() {
         </Section>
 
         {/* 项目链接 */}
-        <Section id="sec-links" title="项目链接 & 网址" desc="可粘贴小红书笔记、Demo 网址、GitHub 地址等" error={formErrors['sec-links']}>
+        <Section
+          id="sec-links"
+          title="项目链接 & 网址"
+          desc="GitHub 仓库链接 + 小红书笔记链接为必填；如有 Demo 在线地址/原型/文档，可在下方继续添加"
+          error={formErrors['sec-links']}
+        >
           <div className="space-y-3">
             {form.links.map((link, idx) => (
               <div key={idx} className="flex gap-2">
@@ -829,10 +842,16 @@ export default function ProjectForm() {
                     updated[idx] = e.target.value
                     updateField('links', updated)
                   }}
-                  placeholder={`链接 ${idx + 1}`}
+                  placeholder={
+                    idx === 0
+                      ? 'GitHub 仓库链接（确认带 #Redhackathon 标签）'
+                      : idx === 1
+                        ? '小红书笔记链接（图文/视频均可，确认已带 #黑客松巅峰赛 标签）'
+                        : `链接 ${idx + 1}（Demo/文档/原型等）`
+                  }
                   className="input-field flex-1"
                 />
-                {form.links.length > 1 && (
+                {idx >= 2 && form.links.length > 2 && (
                   <button
                     onClick={() => updateField('links', form.links.filter((_, i) => i !== idx))}
                     className="text-gray-dark hover:text-red-400 transition-colors text-lg leading-none px-1"
@@ -842,6 +861,13 @@ export default function ProjectForm() {
                 )}
               </div>
             ))}
+          </div>
+          <div className="mt-2 text-gray-dark/70 text-xs leading-relaxed space-y-1">
+            <p>建议包含：</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>GitHub 仓库链接（仓库 Readme/Topics 里带上 <span className="text-gray-light/80">#Redhackathon</span>）</li>
+              <li>小红书笔记链接（图文/视频均可，发布时带 <span className="text-gray-light/80">#黑客松巅峰赛</span>）</li>
+            </ul>
           </div>
           {form.links.length < MAX_LINKS ? (
             <button
@@ -856,7 +882,7 @@ export default function ProjectForm() {
         </Section>
 
         {/* PPT 上传 */}
-        <Section title="队伍 PPT">
+        <Section title="项目 PPT/PDF（可选）">
           {form.ppt_url ? (
             <div className="flex items-center gap-3 p-4 rounded-lg border border-gray-dark/30 bg-white/[0.02]">
               <div className="w-10 h-10 rounded-lg bg-green-primary/10 flex items-center justify-center shrink-0">
@@ -865,7 +891,7 @@ export default function ProjectForm() {
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm">PPT 已上传</p>
+                <p className="text-white text-sm">文件已上传</p>
               </div>
               <a
                 href={`https://docs.google.com/gview?url=${encodeURIComponent(form.ppt_url)}&embedded=false`}
