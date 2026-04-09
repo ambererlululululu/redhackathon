@@ -1,11 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { getSupabaseAdmin } from '@/lib/supabaseServer'
 import { normalizePhoneDigits } from '@/lib/verifyPhone'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
 
 /**
  * 可选：测试用固定队伍+手机号（仅本地/预发在 .env 配置，生产勿设）
@@ -60,7 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
-  const { data: team, error } = await supabase
+  const { data: team, error } = await getSupabaseAdmin()
     .from('teams')
     .select('id, verify_phone')
     .eq('id', team_id)

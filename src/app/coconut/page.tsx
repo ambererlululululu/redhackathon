@@ -31,13 +31,81 @@ export default function ReviewList() {
     )
   }
 
+  function nonEmptyStringCount(v: unknown): number {
+    if (Array.isArray(v)) {
+      return v
+        .map((x) => (typeof x === 'string' ? x.trim() : ''))
+        .filter((s) => s.length > 0).length
+    }
+    if (typeof v === 'string') {
+      const t = v.trim()
+      if (!t) return 0
+      if (t.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(t) as unknown
+          return nonEmptyStringCount(parsed)
+        } catch {
+          return 0
+        }
+      }
+      // treat a single url-like string as 1 entry
+      return 1
+    }
+    return 0
+  }
+
+  function isProjectBlank(p: Project): boolean {
+    const anyText =
+      Boolean(String((p as any).project_name ?? '').trim()) ||
+      Boolean(String((p as any).one_liner ?? '').trim()) ||
+      Boolean(String((p as any).inspiration ?? '').trim()) ||
+      Boolean(String((p as any).solution ?? '').trim()) ||
+      Boolean(String((p as any).highlight ?? '').trim()) ||
+      Boolean(String((p as any).ppt_url ?? '').trim()) ||
+      Boolean(String((p as any).demo_qr_url ?? '').trim())
+
+    if (anyText) return false
+
+    // team_intro: 默认会有 1 个空成员占位，不应被视作“草稿”
+    const teamIntro = (p as any).team_intro
+    const members = Array.isArray(teamIntro)
+      ? teamIntro
+      : (typeof teamIntro === 'string' && teamIntro.trim().startsWith('[')
+          ? (() => {
+              try { return JSON.parse(teamIntro) } catch { return [] }
+            })()
+          : [])
+    const hasRealMember = Array.isArray(members) && members.some((m) => {
+      if (!m || typeof m !== 'object') return false
+      const name = String((m as any).name ?? '').trim()
+      const role = String((m as any).role ?? '').trim()
+      const bio = String((m as any).bio ?? '').trim()
+      return Boolean(name || role || bio)
+    })
+
+    const linksLen = nonEmptyStringCount((p as any).links)
+    const screenshotsLen = nonEmptyStringCount((p as any).screenshots)
+    if (hasRealMember || linksLen > 0 || screenshotsLen > 0) return false
+
+    // 如果数据库里预先创建了 projects 占位行（全空），也应算「未填写」而不是「草稿」
+    const created = String((p as any).created_at ?? '')
+    const updated = String((p as any).updated_at ?? '')
+    if (created && updated && created === updated) return true
+
+    // 无时间字段时：仅凭“全空”判为未填写
+    return true
+  }
+
   const projectMap = new Map(projects.map(p => [p.team_id, p]))
   const submitted = teams.filter(t => projectMap.get(t.id)?.is_submitted)
   const drafts = teams.filter(t => {
     const p = projectMap.get(t.id)
-    return p && !p.is_submitted
+    return p && !p.is_submitted && !isProjectBlank(p)
   })
-  const empty = teams.filter(t => !projectMap.get(t.id))
+  const empty = teams.filter(t => {
+    const p = projectMap.get(t.id)
+    return !p || (p && !p.is_submitted && isProjectBlank(p))
+  })
 
   return (
     <div className="min-h-screen">

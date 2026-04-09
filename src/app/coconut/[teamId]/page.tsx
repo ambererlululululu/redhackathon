@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import BrandLogo from '@/components/BrandLogo'
 import { useParams } from 'next/navigation'
 import { supabase, parseScreenshotUrls, type Project, type Team, type TeamMember } from '@/lib/supabase'
 
@@ -94,7 +93,13 @@ export default function ProjectOnePage() {
         <header className="mb-12">
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3 min-w-0">
-              <BrandLogo className="h-9 w-auto max-w-[180px] shrink-0 object-left" />
+              <svg width="22" height="18" viewBox="0 0 179 150" fill="none" className="shrink-0" aria-hidden>
+                <path
+                  d="M8 142H72L101 97L121 127L111 142H171L87 8L66 42L82 67L53 113L38 95Z"
+                  fill="#d0d0d0"
+                  shapeRendering="geometricPrecision"
+                />
+              </svg>
               <span className="text-gray-dark font-mono text-xs tracking-wider">RED HACKATHON</span>
             </div>
             <a

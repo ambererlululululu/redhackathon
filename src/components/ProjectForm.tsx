@@ -477,7 +477,7 @@ export default function ProjectForm() {
         }} />
 
         <div className="w-full max-w-md relative z-10">
-          {/* RED HACKATHON 主视觉（public/red-hackathon-logo.svg） */}
+          {/* 主视觉：中英与图形均在 SVG 路径内，勿再叠 HTML 字以免字体不一致 */}
           <div className="mb-8 flex flex-col items-center text-center">
             <BrandLogo className="max-h-[7.5rem] sm:max-h-28 w-auto max-w-[min(100%,17rem)] mx-auto object-center" />
             {clientReady && now && !isExpired && (

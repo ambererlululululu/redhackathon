@@ -1,14 +1,9 @@
 import ExcelJS from 'exceljs'
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { Buffer as NodeBuffer } from 'buffer'
+import { getSupabaseAnon } from '@/lib/supabaseServer'
 
 export const runtime = 'nodejs'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 type TeamRow = {
   id: number
@@ -131,6 +126,7 @@ function addImageToCell(sheet: ExcelJS.Worksheet, workbook: ExcelJS.Workbook, pa
 }
 
 export async function GET() {
+  const supabase = getSupabaseAnon()
   const [teamsRes, projectsRes] = await Promise.all([
     supabase.from('teams_public').select('id, name, track, team_declaration').order('id'),
     supabase.from('projects').select('*').eq('is_submitted', true).order('team_id'),

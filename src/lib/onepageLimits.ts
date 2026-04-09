@@ -70,17 +70,16 @@ export function clampLines(text: string, maxLines: number): string {
   return parts.slice(0, maxLines).join('\n')
 }
 
+type ProjectLike = {
+  one_liner?: string
+  inspiration?: string
+  solution?: string
+  highlight?: string
+  team_intro?: unknown
+}
+
 /** 任一区块超过折算行数时，一页纸底部截图略缩小（兼容旧数据） */
-export function shouldCompactScreenshots(
-  project: {
-    one_liner?: string
-    inspiration?: string
-    solution?: string
-    highlight?: string
-    team_intro?: unknown
-  },
-  teamDeclaration = '',
-): boolean {
+export function shouldCompactScreenshots(project: ProjectLike, teamDeclaration = ''): boolean {
   const d = teamDeclaration ?? ''
   const o = project.one_liner ?? ''
   const i = project.inspiration ?? ''
@@ -100,4 +99,75 @@ export function shouldCompactScreenshots(
     }
   }
   return false
+}
+
+/**
+ * 估算「截图区块」以上正文的折算行数（与表单 line-clamp 一致的量级），用于按比例缩小底部截图。
+ */
+export function estimateOnepageAboveLines(project: ProjectLike, teamName: string, teamDeclaration: string): number {
+  let lines = 0
+  lines += effectivePrintLines(project.one_liner ?? '', COLS_PER_LINE)
+  lines += effectivePrintLines(teamName ?? '', COLS_PER_LINE)
+  lines += effectivePrintLines(teamDeclaration ?? '', COLS_PER_LINE)
+  lines += effectivePrintLines(project.inspiration ?? '', COLS_PER_LINE)
+  lines += effectivePrintLines(project.solution ?? '', COLS_PER_LINE)
+  lines += effectivePrintLines(project.highlight ?? '', COLS_PER_LINE)
+  const members = Array.isArray(project.team_intro) ? project.team_intro : []
+  for (const m of members) {
+    if (!m || typeof m !== 'object') continue
+    const name = String((m as { name?: string }).name ?? '').trim()
+    if (!name) continue
+    lines += 1
+    lines += effectivePrintLines(String((m as { bio?: string }).bio ?? ''), COLS_PER_LINE)
+  }
+  return lines
+}
+
+/** 0 最大 … 3 最紧凑；上方越长档位越高 */
+export type ScreenshotMediaTier = 0 | 1 | 2 | 3
+
+const LINE_TIER_1 = 20
+const LINE_TIER_2 = 32
+const LINE_TIER_3 = 44
+
+export function getScreenshotMediaTier(
+  project: ProjectLike,
+  teamName: string,
+  teamDeclaration: string,
+): ScreenshotMediaTier {
+  const lines = estimateOnepageAboveLines(project, teamName, teamDeclaration)
+  let tier: ScreenshotMediaTier = 0
+  if (lines > LINE_TIER_1) tier = 1
+  if (lines > LINE_TIER_2) tier = 2
+  if (lines > LINE_TIER_3) tier = 3
+  if (shouldCompactScreenshots(project, teamDeclaration)) {
+    tier = Math.max(tier, 1) as ScreenshotMediaTier
+    if (lines > LINE_TIER_2 - 4) tier = Math.max(tier, 2) as ScreenshotMediaTier
+  }
+  return tier
+}
+
+/** Tailwind：截图 max-height */
+export const SCREENSHOT_MAX_H_CLASS: Record<ScreenshotMediaTier, string> = {
+  0: 'max-h-[200px]',
+  1: 'max-h-[168px]',
+  2: 'max-h-[136px]',
+  3: 'max-h-[112px]',
+}
+
+/** Demo 二维码图片尺寸 */
+export const DEMO_QR_IMG_CLASS: Record<ScreenshotMediaTier, string> = {
+  0: 'w-20 h-20',
+  1: 'w-[72px] h-[72px]',
+  2: 'w-16 h-16',
+  3: 'w-14 h-14',
+}
+
+/** Demo 二维码列：须容下标题单行，宽度随档位仅影响二维码图（见 DEMO_QR_IMG_CLASS） */
+const DEMO_QR_COL_BASE = 'w-max min-w-[8rem] shrink-0'
+export const DEMO_QR_COL_CLASS: Record<ScreenshotMediaTier, string> = {
+  0: DEMO_QR_COL_BASE,
+  1: DEMO_QR_COL_BASE,
+  2: DEMO_QR_COL_BASE,
+  3: DEMO_QR_COL_BASE,
 }
