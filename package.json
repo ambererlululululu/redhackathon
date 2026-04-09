@@ -6,9 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import-teams-xlsx": "node scripts/import-team-info-xlsx.mjs",
+    "import-teams-xlsx:run": "node --env-file=.env.local scripts/import-team-info-xlsx.mjs --execute"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.102.1",
+    "exceljs": "^4.4.0",
     "next": "16.2.2",
     "react": "19.2.4",
     "react-dom": "19.2.4"

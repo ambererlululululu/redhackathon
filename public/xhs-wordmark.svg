@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 22" width="52" height="22" role="img" aria-label="XHS">
+  <!-- Text as numeric refs so the file stays valid if saved as non-UTF8 -->
+  <rect width="52" height="22" rx="6" fill="#FF2442"/>
+  <text x="26" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="700" font-family="system-ui, -apple-system, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif">&#x5c0f;&#x7ea2;&#x4e66;</text>
+</svg>
