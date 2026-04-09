@@ -87,10 +87,18 @@ export default function ReviewList() {
     const screenshotsLen = nonEmptyStringCount((p as any).screenshots)
     if (hasRealMember || linksLen > 0 || screenshotsLen > 0) return false
 
-    // 如果数据库里预先创建了 projects 占位行（全空），也应算「未填写」而不是「草稿」
+    // 如果是页面自动保存/占位 insert（created_at 和 updated_at 往往非常接近），也应算「未填写」而不是「草稿」
     const created = String((p as any).created_at ?? '')
     const updated = String((p as any).updated_at ?? '')
-    if (created && updated && created === updated) return true
+    if (created && updated) {
+      const c = Date.parse(created)
+      const u = Date.parse(updated)
+      if (Number.isFinite(c) && Number.isFinite(u)) {
+        if (Math.abs(u - c) <= 15_000) return true
+      } else if (created === updated) {
+        return true
+      }
+    }
 
     // 无时间字段时：仅凭“全空”判为未填写
     return true
