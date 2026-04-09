@@ -1,5 +1,5 @@
-import HomeClient from './HomeClient'
+import ProjectForm from '@/components/ProjectForm'
 
 export default function Home() {
-  return <HomeClient />
+  return <ProjectForm />
 }
