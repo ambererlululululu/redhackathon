@@ -609,7 +609,7 @@ export default function ProjectForm() {
               {verifying ? '验证中...' : isExpired ? '查看已提交信息 →' : '开始提交项目信息 →'}
             </button>
             {isExpired && (
-              <p className="text-center text-red-400/70 text-xs">提交已截止（4 月 10 日 12:00），仅可查看已提交的项目</p>
+              <p className="text-center text-red-400/70 text-xs">提交已截止（4 月 10 日 15:15），仅可查看已提交的项目</p>
             )}
           </div>
 
@@ -649,7 +649,7 @@ export default function ProjectForm() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">提交已截止</h2>
           <p className="text-gray-light mb-2 break-words line-clamp-2">{selectedTeam?.name}</p>
-          <p className="text-gray-dark text-sm mb-2">提交截止时间为 4 月 10 日 12:00</p>
+          <p className="text-gray-dark text-sm mb-2">提交截止时间为 4 月 10 日 15:15</p>
           <p className="text-gray-dark/50 text-xs font-mono">/// RED HACKATHON</p>
         </div>
       </div>
