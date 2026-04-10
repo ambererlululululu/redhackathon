@@ -86,18 +86,21 @@ export default function OnepageV2Page() {
   const demoQr = project.demo_qr_url?.trim() ?? ''
   const hasMedia = screenshots.length > 0 || demoQr.length > 0
   const mediaTier = getScreenshotMediaTier(project, team.name ?? '', team.team_declaration ?? '')
-  const [isPortrait, setIsPortrait] = useState(false)
+  const [screenshotOrientation, setScreenshotOrientation] = useState<'unknown' | 'portrait' | 'landscape'>('unknown')
 
   // Detect screenshot orientation from first image
   useEffect(() => {
     if (screenshots.length === 0) return
-    const img = new Image()
-    img.onload = () => setIsPortrait(img.naturalHeight > img.naturalWidth)
+    const img = document.createElement('img')
+    img.onload = () => {
+      setScreenshotOrientation(img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape')
+    }
     img.src = screenshots[0]
-  }, [screenshots])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenshots[0]])
 
-  // Portrait → single row; Landscape → 2-col grid (2x2 for 4 images)
-  const oneRowScreenshots = isPortrait
+  // Portrait → single row; Landscape / unknown → 2-col grid (2x2 for 4 images)
+  const oneRowScreenshots = screenshotOrientation === 'portrait'
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center py-8 print:py-0">
