@@ -183,7 +183,7 @@ export default function OnepageV2Page() {
                 .map((member, idx) => (
                   <div
                     key={idx}
-                    className="flex items-baseline gap-x-2 text-[11px] leading-relaxed"
+                    className="flex items-baseline gap-x-2 text-xs leading-relaxed"
                   >
                     <span className="font-semibold text-white shrink-0 w-[4em] text-right">{member.name}</span>
                     <span className="shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-green-primary/15 text-green-primary font-mono text-[10px] leading-none whitespace-nowrap">
@@ -204,7 +204,7 @@ export default function OnepageV2Page() {
         {project.inspiration && (
           <div className="relative z-10 mb-4">
             <SectionLabel label="02" title="灵感来源" />
-            <p className="text-[11px] text-gray-light leading-loose line-clamp-4 whitespace-pre-line">
+            <p className="text-xs text-gray-light leading-loose line-clamp-4 whitespace-pre-line">
               {project.inspiration}
             </p>
           </div>
@@ -214,7 +214,7 @@ export default function OnepageV2Page() {
         {project.solution && (
           <div className="relative z-10 mb-4">
             <SectionLabel label="03" title="解决方案" />
-            <p className="text-[11px] text-gray-light leading-loose line-clamp-6 whitespace-pre-line">
+            <p className="text-xs text-gray-light leading-loose line-clamp-6 whitespace-pre-line">
               {project.solution}
             </p>
           </div>
@@ -225,7 +225,7 @@ export default function OnepageV2Page() {
           <div className="relative z-10 mb-4">
             <SectionLabel label="04" title="最惊艳的地方" />
             <div className="border border-green-primary/35 bg-green-primary/[0.06] rounded-lg px-3 py-2.5">
-              <p className="text-[11px] text-gray-light leading-loose line-clamp-4 whitespace-pre-line">
+              <p className="text-xs text-gray-light leading-loose line-clamp-4 whitespace-pre-line">
                 {project.highlight}
               </p>
             </div>
