@@ -148,7 +148,7 @@ export default function OnepageV2Page() {
             className={`text-[11px] px-2 py-0.5 rounded-full font-medium font-mono border shrink-0 ${
               team.track === '软件赛道'
                 ? 'border-green-primary/50 bg-green-primary/10 text-green-primary'
-                : 'border-green-bright/50 bg-green-bright/10 text-green-bright'
+                : 'border-green-primary/50 bg-green-primary/10 text-green-primary'
             }`}
           >
             {team.track}
@@ -158,7 +158,7 @@ export default function OnepageV2Page() {
         {/* One-liner */}
         {project.one_liner && (
           <div className="relative z-10 border-l-2 border-green-primary pl-3 mb-4">
-            <p className="text-lg text-green-bright font-medium leading-snug whitespace-pre-line line-clamp-2">
+            <p className="text-lg text-green-primary font-medium leading-snug whitespace-pre-line line-clamp-2">
               {project.one_liner}
             </p>
           </div>
@@ -301,7 +301,7 @@ function SectionLabel({ label, title, className = '' }: { label: string; title: 
       className={`text-sm font-semibold uppercase tracking-wider mb-2 font-mono flex items-baseline gap-2 ${className}`}
     >
       <span className="text-green-primary text-[10px] opacity-70">[{label}]</span>
-      <span className="text-green-bright font-semibold">{title}</span>
+      <span className="text-green-primary font-semibold">{title}</span>
     </h3>
   )
 }
