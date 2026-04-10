@@ -95,7 +95,10 @@ async function fetchImage(url: string): Promise<ImagePayload | null> {
   const u = url.trim()
   if (!u) return null
   try {
-    const res = await fetch(u, { cache: 'no-store' })
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 5000)
+    const res = await fetch(u, { cache: 'no-store', signal: controller.signal })
+    clearTimeout(timer)
     if (!res.ok) return null
     const ct = res.headers.get('content-type') ?? ''
     const ab = await res.arrayBuffer()
@@ -241,16 +244,19 @@ export async function GET() {
     rowObj.height = 120
     rowObj.alignment = { vertical: 'middle', wrapText: true }
 
+    // Fetch all images for this project in parallel
+    const imagePromises = screenshotUrls.map(u => fetchImage(u))
+    if (qrUrl) imagePromises.push(fetchImage(qrUrl))
+    const imageResults = await Promise.all(imagePromises)
+
     // screenshots in col 4..7
-    for (let i = 0; i < 4; i++) {
-      const url = screenshotUrls[i]
-      if (!url) continue
-      const payload = await fetchImage(url)
+    for (let i = 0; i < Math.min(screenshotUrls.length, 4); i++) {
+      const payload = imageResults[i]
       if (payload) addImageToCell(media, workbook, payload, mediaRow, 4 + i)
     }
 
     if (qrUrl) {
-      const payload = await fetchImage(qrUrl)
+      const payload = imageResults[imageResults.length - 1]
       if (payload) addImageToCell(media, workbook, payload, mediaRow, 8)
     }
 
