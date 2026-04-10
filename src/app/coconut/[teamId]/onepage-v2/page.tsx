@@ -186,7 +186,7 @@ export default function OnepageV2Page() {
                     className="flex items-baseline gap-x-2 text-[11px] leading-relaxed"
                   >
                     <span className="font-semibold text-white shrink-0 w-[4em] text-right">{member.name}</span>
-                    <span className="shrink-0 inline-flex items-center justify-center w-[4em] px-1 py-0.5 rounded-full bg-green-primary/15 text-green-primary font-mono text-[10px] leading-none text-center">
+                    <span className="shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-green-primary/15 text-green-primary font-mono text-[10px] leading-none whitespace-nowrap">
                       {member.role?.trim() || '—'}
                     </span>
                     {member.bio?.trim() && (
