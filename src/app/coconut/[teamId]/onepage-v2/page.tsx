@@ -106,7 +106,7 @@ export default function OnepageV2Page() {
 
       {/* A4 Sheet */}
       <div
-        className="onepage-root onepage-v2-root relative w-[210mm] min-h-[297mm] bg-black text-gray-light border border-green-primary/40 px-[8mm] py-[5mm] print:px-[5mm] print:py-[3mm] overflow-hidden print:shadow-none print:max-h-[297mm]"
+        className="onepage-root onepage-v2-root relative w-[210mm] min-h-[297mm] bg-black text-gray-light border border-green-primary/40 px-[8mm] py-[5mm] print:px-[3mm] print:py-[2mm] overflow-hidden print:shadow-none print:max-h-[297mm]"
         style={{ maxHeight: '297mm' }}
       >
         {/* Green gradient overlay */}
