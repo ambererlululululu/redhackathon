@@ -89,15 +89,15 @@ export default function OnepageV2Page() {
   const [screenshotOrientation, setScreenshotOrientation] = useState<'unknown' | 'portrait' | 'landscape'>('unknown')
 
   // Detect screenshot orientation from first image
+  const firstScreenshot = screenshots[0] ?? ''
   useEffect(() => {
-    if (screenshots.length === 0) return
+    if (!firstScreenshot || typeof window === 'undefined') return
     const img = document.createElement('img')
     img.onload = () => {
       setScreenshotOrientation(img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape')
     }
-    img.src = screenshots[0]
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screenshots[0]])
+    img.src = firstScreenshot
+  }, [firstScreenshot])
 
   // Portrait → single row; Landscape / unknown → 2-col grid (2x2 for 4 images)
   const oneRowScreenshots = screenshotOrientation === 'portrait'
