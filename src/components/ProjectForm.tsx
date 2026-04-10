@@ -303,14 +303,14 @@ export default function ProjectForm() {
     return data.publicUrl
   }
 
-  const MAX_PPT_SIZE = 10 * 1024 * 1024 // 10MB
+  const MAX_PPT_SIZE = 50 * 1024 * 1024 // 50MB
   const MAX_IMAGE_SIZE = 1 * 1024 * 1024 // 1MB
 
   const handlePptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > MAX_PPT_SIZE) {
-      alert(`文件大小 ${(file.size / 1024 / 1024).toFixed(1)}MB，超过 10MB 限制，请压缩后重新上传`)
+      alert(`文件大小 ${(file.size / 1024 / 1024).toFixed(1)}MB，超过 50MB 限制，请压缩后重新上传`)
       e.target.value = ''
       return
     }
@@ -997,7 +997,7 @@ export default function ProjectForm() {
               ) : (
                 <div className="space-y-1">
                   <span className="text-gray-light text-sm">点击上传文件</span>
-                  <p className="text-gray-dark/50 text-xs">支持 PPT、PPTX、PDF、Keynote，不超过 10MB</p>
+                  <p className="text-gray-dark/50 text-xs">支持 PPT、PPTX、PDF、Keynote，不超过 50MB</p>
                 </div>
               )}
             </label>
