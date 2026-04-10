@@ -183,9 +183,9 @@ export default function OnepageV2Page() {
                 .map((member, idx) => (
                   <div
                     key={idx}
-                    className="flex items-baseline gap-x-2 text-xs leading-relaxed"
+                    className="flex items-baseline gap-x-2 text-xs leading-relaxed pl-2"
                   >
-                    <span className="font-semibold text-white shrink-0 w-[4em] text-left">{member.name}</span>
+                    <span className="font-semibold text-white shrink-0 min-w-[3em]">{member.name}</span>
                     <span className="shrink-0 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-green-primary/15 text-green-primary font-mono text-[10px] leading-none whitespace-nowrap">
                       {member.role?.trim() || '—'}
                     </span>
