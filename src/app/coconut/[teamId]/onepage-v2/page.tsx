@@ -140,8 +140,8 @@ export default function OnepageV2Page() {
 
 
         {/* Project title + track */}
-        <div className="relative z-10 mb-1 flex items-center gap-2">
-          <h1 className="text-2xl font-bold text-white leading-tight line-clamp-2">
+        <div className="relative z-10 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-white leading-tight line-clamp-2">
             {project.project_name || '未命名项目'}
           </h1>
           <span
@@ -158,7 +158,7 @@ export default function OnepageV2Page() {
         {/* One-liner */}
         {project.one_liner && (
           <div className="relative z-10 border-l-2 border-green-primary pl-3 mb-4">
-            <p className="text-base text-green-bright font-medium leading-snug whitespace-pre-line line-clamp-2">
+            <p className="text-lg text-green-bright font-medium leading-snug whitespace-pre-line line-clamp-2">
               {project.one_liner}
             </p>
           </div>
