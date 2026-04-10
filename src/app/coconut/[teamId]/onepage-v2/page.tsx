@@ -18,6 +18,7 @@ export default function OnepageV2Page() {
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [screenshotOrientation, setScreenshotOrientation] = useState<'unknown' | 'portrait' | 'landscape'>('unknown')
 
   useEffect(() => {
     if (!teamId) return
@@ -54,6 +55,17 @@ export default function OnepageV2Page() {
     load()
   }, [teamId])
 
+  // Detect screenshot orientation from first image
+  const firstScreenshotUrl = project ? (parseScreenshotUrls(project.screenshots).slice(0, 4)[0] ?? '') : ''
+  useEffect(() => {
+    if (!firstScreenshotUrl || typeof window === 'undefined') return
+    const img = document.createElement('img')
+    img.onload = () => {
+      setScreenshotOrientation(img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape')
+    }
+    img.src = firstScreenshotUrl
+  }, [firstScreenshotUrl])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -86,18 +98,6 @@ export default function OnepageV2Page() {
   const demoQr = project.demo_qr_url?.trim() ?? ''
   const hasMedia = screenshots.length > 0 || demoQr.length > 0
   const mediaTier = getScreenshotMediaTier(project, team.name ?? '', team.team_declaration ?? '')
-  const [screenshotOrientation, setScreenshotOrientation] = useState<'unknown' | 'portrait' | 'landscape'>('unknown')
-
-  // Detect screenshot orientation from first image
-  const firstScreenshot = screenshots[0] ?? ''
-  useEffect(() => {
-    if (!firstScreenshot || typeof window === 'undefined') return
-    const img = document.createElement('img')
-    img.onload = () => {
-      setScreenshotOrientation(img.naturalHeight > img.naturalWidth ? 'portrait' : 'landscape')
-    }
-    img.src = firstScreenshot
-  }, [firstScreenshot])
 
   // Portrait → single row; Landscape / unknown → 2-col grid (2x2 for 4 images)
   const oneRowScreenshots = screenshotOrientation === 'portrait'
