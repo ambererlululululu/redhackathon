@@ -86,7 +86,18 @@ export default function OnepageV2Page() {
   const demoQr = project.demo_qr_url?.trim() ?? ''
   const hasMedia = screenshots.length > 0 || demoQr.length > 0
   const mediaTier = getScreenshotMediaTier(project, team.name ?? '', team.team_declaration ?? '')
-  const oneRowScreenshots = mediaTier >= 2
+  const [isPortrait, setIsPortrait] = useState(false)
+
+  // Detect screenshot orientation from first image
+  useEffect(() => {
+    if (screenshots.length === 0) return
+    const img = new Image()
+    img.onload = () => setIsPortrait(img.naturalHeight > img.naturalWidth)
+    img.src = screenshots[0]
+  }, [screenshots])
+
+  // Portrait → single row; Landscape → 2-col grid (2x2 for 4 images)
+  const oneRowScreenshots = isPortrait
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center py-8 print:py-0">
@@ -251,7 +262,7 @@ export default function OnepageV2Page() {
                       : screenshots.length === 1
                         ? 'grid-cols-1'
                         : 'grid-cols-2'
-                  } print:grid-flow-col print:auto-cols-fr print:grid-cols-none`}
+                  }`}
                 >
                   {screenshots.map((url, idx) => (
                     <div
