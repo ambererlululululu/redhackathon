@@ -14,7 +14,7 @@ import WheelPicker from './WheelPicker'
 import BrandLogo from './BrandLogo'
 import { filterTeamsForPicker } from '@/lib/teamsPicker'
 
-const DEADLINE = new Date('2026-04-10T14:30:00+08:00')
+const DEADLINE = new Date('2026-04-10T15:00:00+08:00')
 
 export default function ProjectForm() {
   const [teams, setTeams] = useState<Team[]>([])
